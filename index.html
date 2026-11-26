@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f8fb" />
+    <title>กระเป๋ากลุ่ม — บัญชีรายรับรายจ่าย</title>
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./config.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <main id="authView" class="auth-view">
+      <section class="auth-card">
+        <a class="brand brand-auth" href="#" aria-label="กระเป๋ากลุ่ม">
+          <img class="brand-mark" src="./logo.svg" alt="" aria-hidden="true" />
+          <span>กระเป๋ากลุ่ม</span>
+        </a>
+        <div class="launch-art" aria-hidden="true">
+          <span class="launch-coin">฿</span>
+          <span class="launch-spark spark-one">✦</span>
+          <span class="launch-spark spark-two">✧</span>
+          <span class="launch-leaf"></span>
+        </div>
+        <p class="eyebrow">จัดการเงินไปด้วยกัน</p>
+        <h1 id="authTitle">บัญชีกลุ่มของคุณ<br />กำลังเตรียมพร้อม</h1>
+        <p id="authDescription" class="muted">ไม่ต้องสมัคร ไม่ต้องใส่ชื่อ เรากำลังเตรียมพื้นที่ให้คุณ</p>
+        <div id="configWarning" class="notice notice-warning" hidden>
+          ตอนนี้ใช้ได้ในเครื่องนี้ทันที ข้อมูลจะยังไม่แชร์กับคนอื่น หากต้องการใช้งานกลุ่มแบบเรียลไทม์
+          ให้ตั้งค่า Supabase ตามคู่มือ
+        </div>
+        <button id="startButton" class="button button-primary launch-cta" type="button">
+          เริ่มใช้งานเลย <span aria-hidden="true">→</span>
+        </button>
+        <div id="bootIndicator" class="boot-indicator" aria-hidden="true" hidden><span></span></div>
+        <p id="authMessage" class="form-message launch-message" role="status" aria-live="polite">
+          พร้อมแล้ว กดปุ่มเพื่อเริ่มใช้งาน
+        </p>
+      </section>
+    </main>
+
+    <div id="appView" class="app-view" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="กระเป๋ากลุ่ม">
+          <img class="brand-mark" src="./logo.svg" alt="" aria-hidden="true" />
+          <span>กระเป๋ากลุ่ม</span>
+        </a>
+        <div class="workspace-label">พื้นที่ทำงาน</div>
+        <label class="sr-only" for="groupSelect">เลือกกลุ่ม</label>
+        <select id="groupSelect" class="group-select"></select>
+        <button id="createGroupButton" class="button button-subtle button-wide" type="button">
+          <span aria-hidden="true">＋</span> สร้างกลุ่มใหม่
+        </button>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-caption">บัญชีกลุ่ม</div>
+        <button class="nav-item active" type="button">
+          <span class="nav-icon" aria-hidden="true">▦</span> ภาพรวมและรายการ
+        </button>
+        <div class="sidebar-bottom">
+          <div class="sync-card">
+            <span id="syncDot" class="sync-dot"></span>
+            <div>
+              <strong id="syncLabel">กำลังเชื่อมต่อ</strong>
+              <small id="syncDetail">ซิงก์ข้อมูลเรียลไทม์</small>
+            </div>
+          </div>
+          <div class="account-row">
+            <span id="avatar" class="avatar">ก</span>
+            <span id="accountName" class="account-name"></span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="main-area">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>พื้นที่ทำงาน</span><span class="breadcrumb-separator">/</span><strong id="topGroupName">กลุ่มของฉัน</strong></div>
+          <div class="topbar-actions">
+            <button id="membersButton" class="button button-secondary" type="button">
+              <span aria-hidden="true">♧</span> <span id="memberCount">สมาชิก</span>
+            </button>
+            <button id="inviteButton" class="button button-secondary" type="button">เชิญสมาชิก</button>
+            <button id="resetDashboardButton" class="button button-secondary button-danger-outline" type="button" title="เลือกลบรายการของกลุ่มนี้">
+              <span class="reset-button-icon" aria-hidden="true">↺</span> ล้างข้อมูล
+            </button>
+            <button id="addEntryButton" class="button button-primary" type="button">
+              <span aria-hidden="true">＋</span> เพิ่มรายการ
+            </button>
+          </div>
+        </header>
+
+        <div id="emptyGroups" class="empty-state page-empty" hidden>
+          <span class="empty-illustration" aria-hidden="true">฿</span>
+          <p class="eyebrow">เริ่มต้นใช้งาน</p>
+          <h1>สร้างบัญชีกลุ่มแรกของคุณ</h1>
+          <p class="muted">เพิ่มรายรับ รายจ่าย และเชิญทุกคนมาช่วยกันดูแลบัญชี</p>
+          <button id="emptyCreateGroupButton" class="button button-primary" type="button">สร้างกลุ่ม</button>
+        </div>
+
+        <div id="dashboard" class="dashboard">
+          <div id="localModeNotice" class="local-mode-notice" hidden>
+            <span class="local-mode-icon" aria-hidden="true">i</span>
+            <span><strong>โหมดทดลองในเครื่อง</strong> ข้อมูลจะบันทึกในเบราว์เซอร์นี้เท่านั้น ยังไม่ซิงก์กับสมาชิกคนอื่น</span>
+          </div>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">ภาพรวมบัญชี</p>
+              <h1 id="pageGroupName">กลุ่มของฉัน</h1>
+              <p id="periodLabel" class="muted">สรุปประจำเดือนนี้</p>
+            </div>
+            <div class="heading-tools">
+              <button id="renameGroupButton" class="icon-button heading-icon-button" type="button" aria-label="แก้ไขชื่อกลุ่ม" title="แก้ไขชื่อกลุ่ม">✎</button>
+              <span id="roleBadge" class="role-badge"></span>
+            </div>
+          </div>
+
+          <section class="summary-grid" aria-label="สรุปการเงิน">
+            <article class="summary-card balance-card">
+              <div class="summary-top"><span>คงเหลือเดือนนี้</span><span class="summary-icon icon-balance" aria-hidden="true">฿</span></div>
+              <strong id="balanceValue" class="summary-value">฿0.00</strong>
+              <span class="summary-caption">รายรับหักรายจ่ายในเดือนนี้</span>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top"><span>รายรับเดือนนี้</span><span class="summary-icon icon-income" aria-hidden="true">↗</span></div>
+              <strong id="incomeValue" class="summary-value">฿0.00</strong>
+              <span class="summary-caption">เงินที่รับเข้ากลุ่ม</span>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top"><span>รายจ่ายเดือนนี้</span><span class="summary-icon icon-expense" aria-hidden="true">↘</span></div>
+              <strong id="expenseValue" class="summary-value">฿0.00</strong>
+              <span class="summary-caption">เงินที่จ่ายออกจากกลุ่ม</span>
+            </article>
+          </section>
+
+          <section class="savings-section" aria-labelledby="savingsHeading">
+            <div class="section-heading">
+              <div>
+                <h2 id="savingsHeading">กระปุกออมสิน</h2>
+                <p class="muted">เป้าหมายการออมส่วนตัวของคุณ</p>
+              </div>
+              <button id="createSavingsJarButton" class="button button-primary savings-create-button" type="button">
+                <span aria-hidden="true">＋</span> สร้างกระปุก
+              </button>
+            </div>
+            <div class="savings-privacy-note" role="note">
+              <span aria-hidden="true">i</span>
+              <p><strong>กระปุกและยอดคงเหลือเห็นได้เฉพาะคุณ</strong> แต่ยอดฝาก/ถอนจะถูกบันทึกเป็นรายจ่าย/รายรับในบัญชีกลุ่ม สมาชิกในกลุ่มจะเห็นจำนวนเงินและรายการฝาก/ถอน</p>
+            </div>
+            <div id="savingsLoadError" class="savings-load-error" role="status" hidden>
+              <p id="savingsLoadErrorMessage"></p>
+              <button id="retrySavingsButton" class="button button-secondary" type="button">ลองโหลดอีกครั้ง</button>
+            </div>
+            <div id="savingsEmpty" class="savings-empty" hidden>
+              <span class="savings-empty-icon" aria-hidden="true">◎</span>
+              <div><strong>เริ่มออมเพื่อเป้าหมายของคุณ</strong><p>สร้างกระปุก ตั้งยอดเป้าหมาย แล้วบันทึกเงินฝากหรือถอน</p></div>
+            </div>
+            <div id="savingsJarList" class="savings-grid"></div>
+          </section>
+
+          <section class="transactions-section">
+            <div class="section-heading">
+              <div>
+                <h2>รายการทั้งหมด</h2>
+                <p id="transactionCaption" class="muted">รายการล่าสุดของกลุ่ม อัปเดตให้ทุกคนทันที</p>
+              </div>
+              <label class="filter-label">
+                <span class="sr-only">กรองรายการ</span>
+                <select id="typeFilter" class="filter-select">
+                  <option value="all">ทุกรายการ</option>
+                  <option value="income">รายรับ</option>
+                  <option value="expense">รายจ่าย</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>รายการ</th>
+                    <th>หมวดหมู่</th>
+                    <th>วันที่</th>
+                    <th>ผู้ใช้เงิน</th>
+                    <th>เพิ่มโดย</th>
+                    <th class="amount-column">จำนวนเงิน</th>
+                    <th><span class="sr-only">จัดการ</span></th>
+                  </tr>
+                </thead>
+                <tbody id="transactionRows"></tbody>
+              </table>
+              <div id="emptyTransactions" class="empty-state transactions-empty" hidden>
+                <span class="empty-illustration small" aria-hidden="true">＋</span>
+                <strong>ยังไม่มีรายการ</strong>
+                <span class="muted">เริ่มบันทึกรายรับหรือรายจ่ายของกลุ่มได้เลย</span>
+                <button id="firstEntryButton" class="button button-secondary" type="button">เพิ่มรายการแรก</button>
+              </div>
+            </div>
+          </section>
+          <footer id="pageFooter" class="page-footer">ข้อมูลของกลุ่มจะซิงก์อัตโนมัติเมื่อสมาชิกเพิ่มหรือแก้ไขรายการ</footer>
+        </div>
+      </section>
+    </div>
+
+    <dialog id="entryDialog" class="modal">
+      <form id="entryForm" class="modal-form entry-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">บัญชีกลุ่ม</p><h2 id="entryDialogTitle">เพิ่มรายการ</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="entryDialog" aria-label="ปิด">×</button>
+        </div>
+        <div class="type-toggle" role="group" aria-label="ประเภทรายการ">
+          <button class="type-option selected" data-type="expense" type="button">รายจ่าย</button>
+          <button class="type-option" data-type="income" type="button">รายรับ</button>
+        </div>
+        <label>ชื่อรายการ<input id="entryDescription" maxlength="120" placeholder="เช่น ค่าอาหารกลางวัน" required /></label>
+        <div class="quick-choice-controls">
+          <div id="descriptionQuickChoices" class="quick-choice-list" role="group" aria-label="ชื่อรายการที่ใช้บ่อย"></div>
+          <button class="quick-choice-add" type="button" data-add-choice="description">＋ เพิ่มชื่อ</button>
+        </div>
+        <label>ผู้ใช้เงิน<input id="entrySpentBy" maxlength="80" placeholder="เช่น ผู้ที่ใช้เงิน" /></label>
+        <div class="quick-choice-controls">
+          <div id="spentByQuickChoices" class="quick-choice-list" role="group" aria-label="เลือกผู้ใช้เงิน"></div>
+          <button class="quick-choice-add" type="button" data-add-choice="spender">＋ เพิ่มชื่อ</button>
+        </div>
+        <div class="field-row">
+          <div class="amount-field">
+            <label>จำนวนเงิน (บาท)<input id="entryAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required /></label>
+            <div class="quick-choice-controls">
+              <div id="amountQuickChoices" class="quick-choice-list" role="group" aria-label="จำนวนเงินที่ใช้บ่อย"></div>
+              <button class="quick-choice-add" type="button" data-add-choice="amount">＋ เพิ่มจำนวน</button>
+            </div>
+          </div>
+          <label>วันที่<input id="entryDate" type="date" required /></label>
+        </div>
+        <label>หมวดหมู่
+          <select id="entryCategory">
+            <option>อาหาร</option><option>เดินทาง</option><option>ที่พัก</option><option>ของใช้</option>
+            <option>เงินเดือน</option><option>ขายสินค้า</option><option>บิลและค่าสาธารณูปโภค</option><option>อื่นๆ</option>
+          </select>
+        </label>
+        <div class="quick-choice-controls">
+          <div id="categoryQuickChoices" class="quick-choice-list" role="group" aria-label="เลือกหมวดหมู่"></div>
+          <button class="quick-choice-add" type="button" data-add-choice="category">＋ เพิ่มหมวดหมู่</button>
+        </div>
+        <div id="entryError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button id="resetEntryButton" class="button button-subtle button-reset" type="button" title="ล้างค่าที่กรอกในฟอร์ม">
+            <span aria-hidden="true">↺</span> <span id="resetEntryButtonLabel">ล้างฟอร์ม</span>
+          </button>
+          <button class="button button-secondary" type="button" data-close="entryDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">บันทึกรายการ</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="savingsJarDialog" class="modal modal-narrow">
+      <form id="savingsJarForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">เป้าหมายส่วนตัว</p><h2 id="savingsJarDialogTitle">สร้างกระปุกออมสิน</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="savingsJarDialog" aria-label="ปิด">×</button>
+        </div>
+        <label>ชื่อกระปุก<input id="savingsJarName" maxlength="60" placeholder="เช่น ทริปเที่ยวปลายปี" required /></label>
+        <label>ยอดเงินเป้าหมาย (บาท)<input id="savingsJarTarget" type="number" min="0.01" max="999999999999.99" step="0.01" inputmode="decimal" placeholder="0.00" required /></label>
+        <div id="savingsJarError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="savingsJarDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">บันทึกเป้าหมาย</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="savingsTransactionDialog" class="modal modal-narrow">
+      <form id="savingsTransactionForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">บันทึกในบัญชีกลุ่ม</p><h2 id="savingsTransactionTitle">ฝากเงินเข้ากระปุก</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="savingsTransactionDialog" aria-label="ปิด">×</button>
+        </div>
+        <p id="savingsTransactionDescription" class="muted"></p>
+        <input id="savingsTransactionJarId" type="hidden" />
+        <input id="savingsTransactionType" type="hidden" />
+        <label>จำนวนเงิน (บาท)<input id="savingsTransactionAmount" type="number" min="0.01" max="999999999999.99" step="0.01" inputmode="decimal" placeholder="0.00" required /></label>
+        <label>บันทึกช่วยจำ (ส่วนตัว)<input id="savingsTransactionNote" maxlength="120" placeholder="ไม่บังคับ" /></label>
+        <div id="savingsTransactionError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="savingsTransactionDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">ยืนยันและบันทึก</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="quickChoiceDialog" class="modal modal-narrow">
+      <form id="quickChoiceForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">ตัวเลือกด่วน</p><h2 id="quickChoiceTitle">เพิ่มตัวเลือก</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="quickChoiceDialog" aria-label="ปิด">×</button>
+        </div>
+        <p id="quickChoiceNotice" class="muted"></p>
+        <label id="quickChoiceValueLabel" for="quickChoiceValue">ชื่อ</label>
+        <input id="quickChoiceValue" maxlength="120" required />
+        <label id="quickChoiceCategoryLabel" for="quickChoiceCategory">หมวดหมู่</label>
+        <select id="quickChoiceCategory"></select>
+        <div id="quickChoiceError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="quickChoiceDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">เพิ่มตัวเลือก</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="groupDialog" class="modal modal-narrow">
+      <form id="groupForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">พื้นที่ทำงาน</p><h2>สร้างกลุ่มใหม่</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="groupDialog" aria-label="ปิด">×</button>
+        </div>
+        <p class="muted">กลุ่มจะเป็นพื้นที่ส่วนกลางสำหรับบันทึกบัญชีและเชิญสมาชิก</p>
+        <label>ชื่อกลุ่ม<input id="groupNameInput" maxlength="80" placeholder="เช่น บ้านของเรา" required /></label>
+        <div id="groupError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="groupDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">สร้างกลุ่ม</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="inviteDialog" class="modal modal-narrow">
+      <form id="inviteForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">สมาชิกกลุ่ม</p><h2>เชิญสมาชิก</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="inviteDialog" aria-label="ปิด">×</button>
+        </div>
+        <p class="muted">สร้างลิงก์แล้วส่งให้คนที่ต้องการเชิญ สมาชิกที่เปิดลิงก์และเข้าสู่ระบบจะเข้ากลุ่มนี้ได้</p>
+        <div id="inviteLinkBox" class="invite-link-box" hidden>
+          <input id="inviteLink" readonly aria-label="ลิงก์เชิญ" />
+          <button id="copyInviteButton" class="button button-secondary" type="button">คัดลอก</button>
+        </div>
+        <div id="inviteError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="inviteDialog">ปิด</button>
+          <button id="createInviteButton" class="button button-primary" type="submit">สร้างลิงก์เชิญ</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="membersDialog" class="modal modal-narrow">
+      <div class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">บัญชีกลุ่ม</p><h2>สมาชิก</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="membersDialog" aria-label="ปิด">×</button>
+        </div>
+        <div id="membersList" class="members-list"></div>
+        <div id="membersError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="membersDialog">เสร็จสิ้น</button>
+          <button id="membersInviteButton" class="button button-primary" type="button">เชิญสมาชิก</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="resetDialog" class="modal modal-narrow">
+      <form id="resetForm" class="modal-form reset-form">
+        <div class="modal-heading reset-heading">
+          <span class="reset-heading-icon" aria-hidden="true">↺</span>
+          <div><p class="eyebrow">จัดการข้อมูล</p><h2>เลือกช่วงที่ต้องการล้าง</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="resetDialog" aria-label="ปิด">×</button>
+        </div>
+        <div class="reset-notice">
+          <span class="reset-notice-icon" aria-hidden="true">!</span>
+          <p>เลือกลบรายการในกลุ่มที่กำลังเปิดอยู่ ข้อมูลที่ลบแล้วจะกู้คืนไม่ได้ รายการฝาก/ถอนจากกระปุกออมสินจะเก็บไว้ในประวัติและลบจากส่วนนี้ไม่ได้</p>
+        </div>
+        <div class="reset-options">
+          <label class="reset-option">
+            <input class="reset-scope" type="checkbox" value="day" />
+            <span class="reset-option-icon day-icon" aria-hidden="true">◷</span>
+            <span class="reset-option-copy"><strong>วันนี้</strong><small id="resetDayRange"></small></span>
+            <span id="resetDayCount" class="reset-option-count"></span>
+          </label>
+          <label class="reset-option">
+            <input class="reset-scope" type="checkbox" value="week" />
+            <span class="reset-option-icon week-icon" aria-hidden="true">▦</span>
+            <span class="reset-option-copy"><strong>สัปดาห์นี้</strong><small id="resetWeekRange"></small></span>
+            <span id="resetWeekCount" class="reset-option-count"></span>
+          </label>
+          <label class="reset-option">
+            <input class="reset-scope" type="checkbox" value="month" />
+            <span class="reset-option-icon month-icon" aria-hidden="true">▤</span>
+            <span class="reset-option-copy"><strong>เดือนนี้</strong><small id="resetMonthRange"></small></span>
+            <span id="resetMonthCount" class="reset-option-count"></span>
+          </label>
+          <label class="reset-option">
+            <input class="reset-scope" type="checkbox" value="all" />
+            <span class="reset-option-icon all-icon" aria-hidden="true">∞</span>
+            <span class="reset-option-copy"><strong>รายการทั้งหมด</strong><small>ล้างทุกรายการในกลุ่มนี้</small></span>
+            <span id="resetAllCount" class="reset-option-count"></span>
+          </label>
+          <label class="reset-option">
+            <input id="resetManualSelection" type="checkbox" />
+            <span class="reset-option-icon individual-icon" aria-hidden="true">☷</span>
+            <span class="reset-option-copy"><strong>เลือกรายการเอง</strong><small>ติ๊กเฉพาะรายการที่ต้องการลบ</small></span>
+            <span id="resetIndividualCount" class="reset-option-count"></span>
+          </label>
+        </div>
+        <p id="resetSelectionCount" class="reset-selection-count" aria-live="polite"></p>
+        <details id="resetPreview" class="reset-preview" hidden>
+          <summary><span id="resetPreviewTitle">ดูรายการที่จะลบ</span><span id="resetPreviewCount" class="reset-preview-count"></span></summary>
+          <ul id="resetPreviewItems" class="reset-preview-list"></ul>
+        </details>
+        <div class="modal-actions">
+          <button class="button button-secondary reset-cancel-button" type="button" data-close="resetDialog">ยกเลิก</button>
+          <button id="openDeleteConfirmButton" class="button button-danger reset-submit-button" type="submit" disabled><span aria-hidden="true">↺</span> ล้างข้อมูล</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="deleteConfirmDialog" class="modal modal-narrow">
+      <div class="modal-form delete-confirm-form">
+        <div class="modal-heading reset-heading">
+          <span class="delete-confirm-icon" aria-hidden="true">!</span>
+          <div><p class="eyebrow">ยืนยันการลบ</p><h2>ลบรายการที่เลือก?</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="deleteConfirmDialog" aria-label="ปิด">×</button>
+        </div>
+        <p id="deleteConfirmMessage" class="delete-confirm-message"></p>
+        <p id="deleteConfirmError" class="form-message error" role="status"></p>
+        <div class="modal-actions">
+          <button id="cancelDeleteConfirmButton" class="button button-secondary reset-cancel-button" type="button">ยกเลิก</button>
+          <button id="confirmDeleteButton" class="button button-danger reset-submit-button" type="button"><span aria-hidden="true">!</span> ยืนยันลบ</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="renameDialog" class="modal modal-narrow">
+      <form id="renameForm" class="modal-form">
+        <div class="modal-heading">
+          <div><p class="eyebrow">ตั้งค่ากลุ่ม</p><h2>เปลี่ยนชื่อกลุ่ม</h2></div>
+          <button class="icon-button close-dialog" type="button" data-close="renameDialog" aria-label="ปิด">×</button>
+        </div>
+        <label>ชื่อกลุ่ม<input id="renameGroupInput" maxlength="80" required /></label>
+        <div id="renameError" class="form-message error" role="status"></div>
+        <div class="modal-actions">
+          <button class="button button-secondary" type="button" data-close="renameDialog">ยกเลิก</button>
+          <button class="button button-primary" type="submit">บันทึกชื่อ</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
